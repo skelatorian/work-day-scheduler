@@ -1,46 +1,84 @@
-//text box array
-var textboxArray = $(".form-control");
-//name of array forEach funct that will go through each element in the array
-//the function and I am passing in the elements in the array
-textboxArray.forEach(function(myElement){{
-          if ( this.moment === "ago" ) {
-            this.style.color = ".past";
-          } 
-            else if (this.moment === "from now") {
-                this.style.color = ".future";
-                }
-                else {
-                    this.style.color = ".present";
-                }
-            
-        };
-      });
+$(function () {});
+  
+/* var declaration*/
+var today = moment().format("dddd, MMMM Do");
 
+var atm = moment().format("H A");
 
+/* Entry for each hour of the workday 
+    9am - 5pm */
 
-//text box array
-var textboxArray = $(".form-control");
-for (let i = 0; i < textboxArray.length; i++) {
-    let val = getCookie("box" + i);
-    textboxArray[i].value = val != null ? val : "";
-  }
-   
-  document.getElementById("date").innerHTML = moment();
-   
-  console.log(moment())
-  function test(box) {
-    setCookie("box" + box, textboxArray[box].value);
-  }
+var planWorkDay = [
+  { time: "9 AM", event: "" },
+  { time: "10 AM", event: "" },
+  { time: "11 AM", event: "" },
+  { time: "12 PM", event: "" },
+  { time: "1 PM", event: "" },
+  { time: "2 PM", event: "" },
+  { time: "3 PM", event: "" },
+  { time: "4 PM", event: "" },
+  { time: "5 PM", event: "" },
+];
 
-  function setCookie(name, value) {
-    document.cookie = name + "=" + value + ";path=/;";
+/* Local Storage check */
+var workEvents = JSON.parse(localStorage.getItem("workDay"));
+if (workEvents) {
+  planWorkDay = workEvents;
+}
 
-  }
-   
-  function getCookie(name) {
-    var v = document.cookie.match("(^|;) ?" + name + "=([^;]*)(;|$)");
-    return v ? v[2] : null;
-  }
+/* today vibes */
+$("#currentDay").text(today);
 
+/* create rows (keep under everything else so it loads and not break) */
 
-   
+planWorkDay.forEach(function(timeBlock, index) {
+	var timeLabel = timeBlock.time;
+	var blockColor = colorRow(timeLabel);
+	var row =
+		'<div class="time-block" id="' +
+		index +
+		'"><div class="row no-gutters input-group"><div class="col-sm col-lg-1 input-group-prepend hour justify-content-sm-end pr-3 pt-3">' +
+		timeLabel +
+		'</div><textarea class="form-control ' +
+		blockColor +
+		'">' +
+		timeBlock.event +
+		'</textarea><div class="col-sm col-lg-1 input-group-append"><button class="saveBtn btn-block" type="submit"><i class="fas fa-save"></i></button></div></div></div>';
+
+	/* Adding rows to container div */
+	$(".container").append(row);
+});
+
+/* Color rows based on current time */
+function colorRow(time) {
+    var planMoment = moment(atm, "H A");
+    
+	var planEntry = moment(time, "H A");
+	if (planMoment.isBefore(planEntry) === true) {
+		return "future";
+	} else if (planMoment.isAfter(planEntry) === true) {
+		return "past";
+	} else {
+		return "present";
+	}
+}
+
+/* Save the event */
+$(".saveBtn").on("click", function() {
+	var blockID = parseInt(
+		$(this)
+			.closest(".time-block")
+			.attr("id")
+	);
+	var userEntry = $.trim(
+		$(this)
+			.parent()
+			.siblings("textarea")
+			.val()
+	);
+	planWorkDay[blockID].event = userEntry;
+
+	/* Reset the local storage so it can update itself */
+	localStorage.setItem("workDay", JSON.stringify(planWorkDay));
+});
+
